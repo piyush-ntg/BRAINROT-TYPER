@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brainrot Typer – type the rot before it kills your aura</title>
+<meta name="description" content="Type falling brainrot words as fast as you can. Don’t let your aura hit zero. Share your score.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a0933; --bg2:#2b0f52; --pink:#ff2e9a; --lime:#b6ff3b; --sun:#ffd23f; --ice:#5ce1ff; --ink:#fff7ec;
+  --display:"Bungee","Impact",system-ui,sans-serif; --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(120% 80% at 50% 0%,var(--bg2),var(--bg));color:var(--ink);font-family:var(--body);font-weight:500;
+  display:flex;flex-direction:column;overflow:hidden;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);-webkit-tap-highlight-color:transparent}
+.hud{display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:3px solid var(--pink);flex-wrap:wrap}
+.hud b{font-family:var(--display);font-weight:400}
+.logo{font-family:var(--display);color:var(--lime);font-size:18px;letter-spacing:.5px}
+.stat{font-size:14px;color:var(--ice)}
+.stat b{font-size:20px;color:var(--ink)}
+.aurawrap{flex:1;min-width:120px}
+.aurawrap small{display:block;font-size:12px;color:var(--sun);margin-bottom:3px}
+.bar{height:12px;border-radius:99px;background:#0006;overflow:hidden;border:2px solid var(--ink)}
+#aura{height:100%;width:100%;background:var(--lime);transition:width .2s,background .2s}
+#mute{background:none;border:2px solid var(--ink);color:var(--ink);border-radius:8px;padding:4px 8px;font-size:16px;cursor:pointer}
+#field{position:relative;flex:1;overflow:hidden;cursor:text}
+.w{position:absolute;left:0;top:0;padding:6px 12px;border-radius:12px;font-family:var(--display);font-size:clamp(16px,4.6vw,26px);
+  background:var(--pink);color:#fff;border:3px solid var(--ink);white-space:nowrap;will-change:transform;box-shadow:4px 4px 0 #0007}
+.w.t{background:var(--sun);color:#1a0933}
+.w .d{color:#1a0933;opacity:.45;text-decoration:line-through}
+.w:not(.t) .d{color:#fff}
+.pop{position:absolute;pointer-events:none;font-family:var(--display);color:var(--lime);font-size:20px;text-shadow:2px 2px 0 #000;animation:up .7s forwards}
+@keyframes up{to{transform:translateY(-50px);opacity:0}}
+#call{position:absolute;left:0;right:0;top:34%;text-align:center;font-family:var(--display);font-size:clamp(34px,11vw,84px);color:var(--sun);
+  text-shadow:4px 4px 0 var(--pink);pointer-events:none;opacity:0}
+#call.on{animation:boom .9s}
+@keyframes boom{0%{opacity:1;transform:scale(.4) rotate(-6deg)}25%{transform:scale(1.1) rotate(3deg)}100%{opacity:0;transform:scale(1.25)}}
+.shake{animation:sh .25s}
+@keyframes sh{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px;background:#1a0933ee;z-index:5}
+.ov[hidden]{display:none}
+.ov h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,12vw,76px);line-height:1;color:var(--lime);text-shadow:4px 4px 0 var(--pink)}
+.ov p{max-width:36ch;font-size:17px;line-height:1.45}
+.big{font-family:var(--display);font-size:56px;color:var(--sun)}
+button.go{font-family:var(--display);font-size:22px;background:var(--lime);color:#1a0933;border:3px solid var(--ink);border-radius:14px;padding:12px 28px;cursor:pointer;box-shadow:5px 5px 0 var(--pink)}
+button.go:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--pink)}
+button.go.alt{background:var(--ice)}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#kb{position:absolute;opacity:0;pointer-events:none;left:0;bottom:0;width:1px;height:1px}
+@media (prefers-reduced-motion:reduce){.shake,#call.on,.pop{animation:none}}
+</style>
+</head>
+<body>
+<div class="hud">
+  <span class="logo">BRAINROT TYPER</span>
+  <span class="stat">Score <b id="sc">0</b></span>
+  <span class="stat">Combo <b id="cb">0</b> <b id="mx">x1</b></span>
+  <span class="stat">Best <b id="bs">0</b></span>
+  <div class="aurawrap"><small>AURA</small><div class="bar"><div id="aura"></div></div></div>
+  <button id="mute" aria-label="Toggle sound">🔊</button>
+</div>
+<div id="field">
+  <div id="call"></div>
+  <input id="kb" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Type here">
+  <div class="ov" id="start">
+    <h1>Brainrot Typer</h1>
+    <p>Words are falling. Type them before they hit the floor. Every miss drains your aura. Aura at zero and you’re cooked.</p>
+    <p>Chain letters without a mistake to build your combo.</p>
+    <button class="go" id="play">Start typing</button>
+  </div>
+  <div class="ov" id="over" hidden>
+    <h1>Aura 0</h1>
+    <div class="big" id="fs">0</div>
+    <p id="roast"></p>
+    <div class="row">
+      <button class="go" id="again">Run it back</button>
+      <button class="go alt" id="share">Share score</button>
+    </div>
+    <p id="msg" aria-live="polite" style="font-size:14px;color:var(--ice)"></p>
+  </div>
+</div>
+<script>
+const W=["skibidi","sigma","rizz","gyatt","ohio","mewing","aura","goated","cap","bussin","sus","npc","ratio","delulu","drip","yeet","slay","mogged","cooked","lowkey","bro","glaze","peak","fire","dawg","nah","fr fr","six seven","no cap","rizzler","fanum tax","chill guy","touch grass","brain rot","sigma male","only in ohio","skibidi toilet","aura farming","main character","tung tung sahur","tralalero","bombardiro","looksmaxxing","grimace shake","ballerina cappuccina","ohio final boss","rizz party","bhai kya kar raha hai","chal type kar","bhai sigma hai"];
+const ROAST=[[0,"Zero aura. Even the NPCs are laughing."],[300,"Mid. Touch grass and try again."],[1000,"Not bad. Respectable rizz."],[2500,"Sigma typing detected."],[5000,"Ohio’s final boss. Screenshot this."],[9000,"Your keyboard has more aura than you."]];
+const $=id=>document.getElementById(id), field=$("field"), kb=$("kb");
+let words=[],target=null,score=0,combo=0,aura=100,best=0,running=false,last=0,spawnT=0,muted=false,ac=null;
+try{best=+localStorage.getItem("brt-best")||0}catch(e){}
+$("bs").textContent=best;
+const lvl=()=>1+Math.floor(score/1500), mult=()=>Math.min(5,1+Math.floor(combo/5));
+
+function beep(f,d=.07,type="square"){
+  if(muted)return;
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=.05;
+    o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}
+}
+function pick(){
+  const L=lvl(), pool=W.filter(w=>L<3?w.length<=9:L<6?w.length<=14:true);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function spawn(){
+  const text=pick(),el=document.createElement("div");el.className="w";
+  field.appendChild(el);
+  const w={text,pos:0,el,y:-50,v:38+lvl()*9+Math.random()*22};
+  w.x=8+Math.random()*Math.max(0,field.clientWidth-el.offsetWidth-16);
+  paint(w);words.push(w);
+}
+function paint(w){
+  const done=w.text.slice(0,w.pos).replace(/ /g,"␣"),rest=w.text.slice(w.pos).replace(/ /g,"␣");
+  w.el.innerHTML=(done?'<span class="d">'+done+"</span>":"")+rest;
+  w.el.classList.toggle("t",w===target);
+}
+function pop(txt,x,y){
+  const p=document.createElement("div");p.className="pop";p.textContent=txt;
+  p.style.left=x+"px";p.style.top=y+"px";field.appendChild(p);setTimeout(()=>p.remove(),700);
+}
+function call(t){const c=$("call");c.textContent=t;c.classList.remove("on");void c.offsetWidth;c.classList.add("on")}
+function hud(){
+  $("sc").textContent=score;$("cb").textContent=combo;$("mx").textContent="x"+mult();
+  const a=$("aura");a.style.width=Math.max(0,aura)+"%";
+  a.style.background=aura>60?"var(--lime)":aura>30?"var(--sun)":"var(--pink)";
+}
+function shake(){field.classList.remove("shake");void field.offsetWidth;field.classList.add("shake")}
+const CALLS={10:"RIZZ!",25:"SIGMA!",50:"AURA +9999",75:"OHIO BOSS",100:"UNHINGED"};
+function kill(w){
+  const gain=w.text.length*10*mult();score+=gain;combo++;aura=Math.min(100,aura+2);
+  pop("+"+gain,w.x,w.y);beep(520+Math.min(combo,30)*20,.09);
+  if(CALLS[combo]){call(CALLS[combo]);beep(880,.25,"sawtooth")}
+  w.el.remove();words=words.filter(x=>x!==w);if(target===w)target=null;hud();
+}
+function miss(w){
+  aura-=20;combo=0;beep(120,.25,"sawtooth");shake();
+  w.el.remove();words=words.filter(x=>x!==w);if(target===w)target=null;hud();
+  if(aura<=0)end();
+}
+function press(ch){
+  if(!running||!/^[a-z0-9 ]$/.test(ch))return;
+  if(!target){
+    const c=words.filter(w=>w.text[0]===ch).sort((a,b)=>b.y-a.y)[0];
+    if(!c){combo=0;beep(150,.1);shake();hud();return}
+    target=c;
+  }
+  if(target.text[target.pos]===ch){
+    target.pos++;beep(400+target.pos*30,.04);
+    if(target.pos>=target.text.length)kill(target);else paint(target);
+  }else{combo=0;beep(150,.1);shake();hud();paint(target)}
+}
+kb.addEventListener("input",()=>{for(const c of kb.value.toLowerCase())press(c);kb.value=""});
+field.addEventListener("pointerdown",()=>{if(running)kb.focus()});
+function loop(t){
+  if(!running)return;
+  const dt=Math.min(.05,(t-last)/1000);last=t;spawnT-=dt;
+  if(spawnT<=0){spawn();spawnT=Math.max(.5,1.7-lvl()*.13)}
+  const H=field.clientHeight;
+  for(const w of words.slice()){
+    w.y+=w.v*dt;w.el.style.transform="translate("+w.x+"px,"+w.y+"px)";
+    if(w.y>H-46)miss(w);
+  }
+  requestAnimationFrame(loop);
+}
+function start(){
+  words.forEach(w=>w.el.remove());words=[];target=null;score=0;combo=0;aura=100;spawnT=.3;
+  $("start").hidden=true;$("over").hidden=true;running=true;hud();kb.focus();
+  last=performance.now();requestAnimationFrame(loop);
+}
+function end(){
+  running=false;kb.blur();
+  if(score>best){best=score;$("bs").textContent=best;try{localStorage.setItem("brt-best",best)}catch(e){}}
+  $("fs").textContent=score;
+  $("roast").textContent=ROAST.filter(r=>score>=r[0]).pop()[1];
+  $("msg").textContent="";$("over").hidden=false;
+}
+$("play").onclick=start;$("again").onclick=start;
+$("mute").onclick=()=>{muted=!muted;$("mute").textContent=muted?"🔇":"🔊"};
+$("share").onclick=async()=>{
+  const text="I scored "+score+" on Brainrot Typer 💀 Can you beat me?",url=location.href;
+  try{
+    if(navigator.share){await navigator.share({title:"Brainrot Typer",text,url})}
+    else{await navigator.clipboard.writeText(text+" "+url);$("msg").textContent="Copied. Paste it in your group chat."}
+  }catch(e){$("msg").textContent="Couldn’t share. Screenshot your score instead."}
+};
+hud();
+</script>
+</body>
+</html>
